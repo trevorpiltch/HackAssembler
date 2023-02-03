@@ -37,3 +37,27 @@ impl SymbolTable {
         }
     }
 }
+
+#[cfg(test)]
+mod symbol_table_tests {
+    use crate::symbol_table::SymbolTable;
+
+    //MARK: Symbol table tests
+    #[test]
+    fn entry_added() {
+        let mut table = SymbolTable::new();
+        table.add_entry("TRUE", 1);
+
+        assert_eq!(table.contains("TRUE"), true);
+        assert_eq!(table.contains("FALSE"), false);
+    }
+
+    #[test]
+    fn gets_address() {
+        let mut table = SymbolTable::new();
+        table.add_entry("TRUE", 1);
+
+        assert_eq!(table.get_address("TRUE").unwrap(), 1);
+        assert_eq!(table.get_address("FALSE"), None);
+    }
+}

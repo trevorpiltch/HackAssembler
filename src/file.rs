@@ -43,3 +43,22 @@ pub fn parse_lines<'a>(contents: &'a String) -> Vec<&'a str> {
 
     return lines
 }
+
+#[cfg(test)]
+mod file_tests {
+    use crate::file;
+
+    #[test]
+    fn create_file() {
+        file::create_file("tmp_test.txt", String::from("This is just a temporary file :)"));
+
+        assert_eq!(file::get_file_test("tmp_test.txt"), String::from("This is just a temporary file :)"));
+    }
+
+    #[test]
+    #[should_panic(expected = "Must be a file in the current directory.")]
+    fn file_not_foun() {
+        file::create_file("tmp_test.txt", String::from("This is just a temporary file :)"));
+        file::get_file_test("temp_test.txt");
+    }
+}
