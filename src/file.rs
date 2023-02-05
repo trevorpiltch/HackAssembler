@@ -50,7 +50,7 @@ mod file_tests {
 
     #[test]
     fn create_file() {
-        file::create_file("tmp_test.txt", String::from("This is just a temporary file :)"));
+        let _create = file::create_file("tmp_test.txt", String::from("This is just a temporary file :)"));
 
         assert_eq!(file::get_file_test("tmp_test.txt"), String::from("This is just a temporary file :)"));
     }
@@ -58,7 +58,7 @@ mod file_tests {
     #[test]
     #[should_panic(expected = "Must be a file in the current directory.")]
     fn file_not_foun() {
-        file::create_file("tmp_test.txt", String::from("This is just a temporary file :)"));
-        file::get_file_test("temp_test.txt");
+        let _create = file::create_file("tmp_test.txt", String::from("This is just a temporary file :)"));
+        let _get = file::get_file_test("temp_test.txt");
     }
 }

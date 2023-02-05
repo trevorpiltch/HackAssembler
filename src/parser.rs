@@ -1,10 +1,12 @@
 use regex::Regex;
 
+/// Helper struct for parsing instructions
 pub struct Instruction<'a> {
     pub text: &'a str,
     pub kind: Option<InstructionType>
 }
 
+/// Type of instruction
 #[derive(PartialEq, Debug)]
 pub enum InstructionType {
     A,
@@ -13,6 +15,7 @@ pub enum InstructionType {
 }
 
 impl Instruction<'_> {
+    /// Create a new instruction
     pub fn new(instr: &str) -> Instruction {
         Instruction {
             text: instr,
@@ -24,7 +27,8 @@ impl Instruction<'_> {
    fn instruction_type(instr: &str) -> Option<InstructionType> {
         let a = Regex::new("@([(a-z)(A-Z)(0-9)]+)").unwrap();
         let l = Regex::new(r"\(([(a-z)(A-Z)(0-9)]+)\)").unwrap();
-        let c = Regex::new(r"((\w)?)(=?)((\w\W\d)?)(;?)(\w\w\w)?").unwrap();
+        let has_dest = instr.find('=');
+        let has_jump = instr.find(';');
 
         let mut instr_type: Option<InstructionType> = None;
 
@@ -34,7 +38,7 @@ impl Instruction<'_> {
         else if l.is_match(instr) {
             instr_type = Some(InstructionType::L);
         }
-        else if c.is_match(instr) {
+        else if (has_dest != None) || (has_jump != None) {
             instr_type = Some(InstructionType::C);
         }
 
@@ -62,10 +66,13 @@ impl Instruction<'_> {
     /// Returns the dest in dest=comp;jmp
     pub fn dest(&self) -> Option<String> {
         if self.kind == Some(InstructionType::C) {
-            let re = Regex::new(r"([A-Z]*)(=?)(\w\W\d|\w)?(;?)(\w\w\w)?").unwrap();
-            let caps = re.captures(self.text).unwrap();
+            let has_dest = self.text.find('=');
 
-            return Some(caps[1].to_string())
+            if has_dest != None {
+                let dest: Vec<&str> = self.text.split('=').collect();
+
+                return Some(dest[0].to_string())
+            }
         }
 
         return None
@@ -74,14 +81,24 @@ impl Instruction<'_> {
     /// Returns the comp in dest=comp;jmp
     pub fn comp(&self) -> Option<String> {
         if self.kind == Some(InstructionType::C) {
-            let re = Regex::new(r"([A-Z]*)(=?)(\w\W\d|\w)?(;?)(\w\w\w)?").unwrap();
-            let caps = re.captures(self.text);
+            let has_dest = self.text.find('=');
+            let has_jump = self.text.find(';');
 
-            println!("{:?}", caps);
+            if (has_dest != None) && (has_jump != None) {
+                let split_1: Vec<&str> = self.text.split('=').collect();
+                let split_2: Vec<&str> = split_1[1].split(';').collect();
 
-            match caps {
-                Some(x) =>  return Some(x[3].to_string()),
-                None => return None
+                return Some(split_2[0].to_string())
+            }
+            else if has_dest != None {
+                let split: Vec<&str> = self.text.split('=').collect();
+
+                return Some(split[1].to_string())
+            }
+            else if has_jump != None {
+                let split: Vec<&str> = self.text.split(';').collect();
+
+                return Some(split[0].to_string());
             }
         }
 
@@ -91,17 +108,27 @@ impl Instruction<'_> {
     /// Returns the jmp in dest=comp;jmp
     pub fn jump(&self) -> Option<String> {
         if self.kind == Some(InstructionType::C) {
-            let re = Regex::new(r"([A-Z]*)(=?)(\w\W\d|\w)?(;?)(\w\w\w)?").unwrap();
-            let caps = re.captures(self.text).unwrap();
+            let has_jump = self.text.find(';');
 
-            println!("{:?}", caps);
+            if has_jump != None {
+                let split: Vec<&str> = self.text.split(';').collect();
 
-            if caps[4] == ";".to_string() {
-                return Some(caps[5].to_string())
+                return Some(split[1].to_string())
             }
         }
 
         return None
+    }
+
+    /// Helper method to print instruction info to std output
+    pub fn get_info(&self) {
+        println!("Type: {:?}", self.kind);
+
+        println!("Symbol: {:?}", self.symbol());
+
+        println!("Dest: {:?}", self.dest());
+        println!("Comp: {:?}", self.comp());
+        println!("Jump: {:?}", self.jump());
     }
 }
 
@@ -111,27 +138,27 @@ mod parser_tests {
 
     #[test]
     fn c_instr() {
-        let c1 = Instruction::new("D=D+1;JMP");
-        let c2 = Instruction::new("D=A");
-        let c3 = Instruction::new("DM=A");
-        let c4 = Instruction::new("0;JLT");
+        let all = Instruction::new("D=D+1;JMP");
+        let no_jump = Instruction::new("DM=D+1");
+        let c3 = Instruction::new("ADM=D&M");
+        let no_dest = Instruction::new("0;JMP");
 
-        assert_eq!(c1.symbol(), None);
+        assert_eq!(all.symbol(), None);
 
-        assert_eq!(c1.dest().unwrap(), "D");
-        assert_eq!(c2.dest().unwrap(), "D");
-        assert_eq!(c3.dest().unwrap(), "DM");
-        assert_eq!(c4.dest().unwrap(), "");
+        assert_eq!(all.dest().unwrap(), "D");
+        assert_eq!(no_jump.dest().unwrap(), "DM");
+        assert_eq!(c3.dest().unwrap(), "ADM");
+        assert_eq!(no_dest.dest(), None);
 
-        assert_eq!(c1.comp().unwrap(), "D+1");
-        assert_eq!(c2.comp().unwrap(), "A");
-        assert_eq!(c3.comp().unwrap(), "A");
-        assert_eq!(c4.comp().unwrap(), "0");
+        assert_eq!(all.comp().unwrap(), "D+1");
+        assert_eq!(no_jump.comp().unwrap(), "D+1");
+        assert_eq!(no_dest.comp().unwrap(), "0");
+        assert_eq!(c3.comp().unwrap(), "D&M");
 
-        assert_eq!(c1.jump().unwrap(), "JMP");
-        assert_eq!(c2.jump(), None);
+        assert_eq!(all.jump().unwrap(), "JMP");
+        assert_eq!(no_jump.jump(), None);
         assert_eq!(c3.jump(), None);
-        assert_eq!(c4.jump().unwrap(), "JLT");
+        assert_eq!(no_dest.jump().unwrap(), "JMP");
     }
 
     #[test]
