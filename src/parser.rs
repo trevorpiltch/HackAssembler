@@ -1,3 +1,4 @@
+use crate::translator;
 use regex::Regex;
 
 /// Helper struct for parsing instructions
@@ -43,6 +44,33 @@ impl Instruction<'_> {
         }
 
         return instr_type
+    }
+
+    /// Returns the full binary code for the instruction (if its a c instruction)
+    pub fn get_code(&self) -> String {
+        let dest = self.dest();
+        let comp = self.comp().unwrap();
+        let jump = self.jump();
+
+        let comp_code = translator::comp_code(&comp);
+
+        let mut code: String = format!("1110{}", comp_code);
+
+        if dest != None {
+            code = format!("{}{}", code, translator::dest_code(&dest.unwrap()));
+        }
+        else {
+            code = format!("{}{}", "000", code);
+        }
+
+        if jump != None {
+            code = format!("{}{}", code, translator::jump_code(&jump.unwrap()));
+        }
+        else {
+            code = format!("{}{}", code, "000");
+        }
+
+        return code;
     }
 
     /// Returns the symbol xxx in @xxx or (xxx)
@@ -124,11 +152,14 @@ impl Instruction<'_> {
     pub fn get_info(&self) {
         println!("Type: {:?}", self.kind);
 
-        println!("Symbol: {:?}", self.symbol());
-
-        println!("Dest: {:?}", self.dest());
-        println!("Comp: {:?}", self.comp());
-        println!("Jump: {:?}", self.jump());
+        if self.kind != Some(InstructionType::C) {
+            println!("Symbol: {:?}", self.symbol());
+        }
+        else {
+            println!("Dest: {:?}", self.dest());
+            println!("Comp: {:?}", self.comp());
+            println!("Jump: {:?}", self.jump());
+        }
     }
 }
 
@@ -137,27 +168,30 @@ mod parser_tests {
     use super::*;
 
     #[test]
-    fn c_instr() {
+    fn c_all() {
         let all = Instruction::new("D=D+1;JMP");
-        let no_jump = Instruction::new("DM=D+1");
-        let c3 = Instruction::new("ADM=D&M");
-        let no_dest = Instruction::new("0;JMP");
 
         assert_eq!(all.symbol(), None);
-
         assert_eq!(all.dest().unwrap(), "D");
-        assert_eq!(no_jump.dest().unwrap(), "DM");
-        assert_eq!(c3.dest().unwrap(), "ADM");
-        assert_eq!(no_dest.dest(), None);
-
         assert_eq!(all.comp().unwrap(), "D+1");
-        assert_eq!(no_jump.comp().unwrap(), "D+1");
-        assert_eq!(no_dest.comp().unwrap(), "0");
-        assert_eq!(c3.comp().unwrap(), "D&M");
-
         assert_eq!(all.jump().unwrap(), "JMP");
+    }
+
+    #[test]
+    fn c_no_jump() {
+        let no_jump = Instruction::new("DM=D+1");
+
+        assert_eq!(no_jump.dest().unwrap(), "DM");
+        assert_eq!(no_jump.comp().unwrap(), "D+1");
         assert_eq!(no_jump.jump(), None);
-        assert_eq!(c3.jump(), None);
+    }
+
+    #[test]
+    fn c_no_dest() {
+        let no_dest = Instruction::new("0;JMP");
+
+        assert_eq!(no_dest.dest(), None);
+        assert_eq!(no_dest.comp().unwrap(), "0");
         assert_eq!(no_dest.jump().unwrap(), "JMP");
     }
 

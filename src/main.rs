@@ -4,7 +4,26 @@ pub mod parser;
 pub mod translator;
 
 fn main() {
-    let instr = parser::Instruction::new("A=D+1;JMP");
+    let content = file::get_file();
 
-    instr.get_info();
+    let lines = file::parse_lines(&content);
+
+    for line in lines {
+        if !isLineComment(&line) && !line.is_empty() {
+            let instr = parser::Instruction::new(&line);
+//            instr.get_info();
+
+            if instr.kind == Some(parser::InstructionType::C) {
+                println!("Line: {}\nCode:{}", line, instr.get_code());
+            }
+        }
+    }
+}
+
+fn isLineComment(line: &str) -> bool {
+    if line.find("//") != None {
+        return true
+    }
+
+    return false
 }

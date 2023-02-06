@@ -13,13 +13,9 @@ struct Args {
 /// Gets the file and returns its contents as a single string
 pub fn get_file() -> String {
     let args = Args::parse();
-    println!("\nFile name: {:?}", args.file_name);
+    println!("File name: {:?}\n", args.file_name);
 
     fs::read_to_string(args.file_name).expect("Must be a file in the current directory.")
-}
-
-pub fn get_file_test(name: &str) -> String {
-    fs::read_to_string(name).expect("Must be a file in the current directory.")
 }
 
 /// Creates the file in the current directory named name with contents
@@ -42,6 +38,10 @@ pub fn parse_lines<'a>(contents: &'a String) -> Vec<&'a str> {
     }
 
     return lines
+}
+
+pub fn get_file_test(name: &str) -> String {
+    fs::read_to_string(name).expect("Must be a file in the current directory.")
 }
 
 #[cfg(test)]
