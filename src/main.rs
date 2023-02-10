@@ -20,7 +20,7 @@ fn main() {
     let mut variable_address = 16;
 
     init_progress_bar(lines.len());
-    set_progress_bar_action("Assembling", Color::Blue, Style::Bold);
+    set_progress_bar_action("Assembling", Color::Red, Style::Bold);
 
     for mut line in lines {
         inc_progress_bar();
