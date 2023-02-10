@@ -27,7 +27,7 @@ impl Instruction<'_> {
     /// Returns the type of the instruction
    fn instruction_type(instr: &str) -> Option<InstructionType> {
         let a = Regex::new("@([(a-z)(A-Z)(0-9)]+)").unwrap();
-        let l = Regex::new(r"\(([(a-z)(A-Z)(0-9)]+)\)").unwrap();
+        let l = Regex::new(r"\((.+)\)").unwrap();
         let has_dest = instr.find('=');
         let has_jump = instr.find(';');
 
@@ -47,20 +47,20 @@ impl Instruction<'_> {
     }
 
     /// Returns the full binary code for the instruction (if its a c instruction)
-    pub fn get_code(&self) -> String {
+    pub fn get_c_code(&self) -> String {
         let dest = self.dest();
         let comp = self.comp().unwrap();
         let jump = self.jump();
 
-        let comp_code = translator::comp_code(&comp);
+        let (a, c) = translator::comp_code(&comp);
 
-        let mut code: String = format!("1110{}", comp_code);
+        let mut code: String = format!("111{}{}", a, c);
 
         if dest != None {
             code = format!("{}{}", code, translator::dest_code(&dest.unwrap()));
         }
         else {
-            code = format!("{}{}", "000", code);
+            code = format!("{}{}", code, "000");
         }
 
         if jump != None {
@@ -73,16 +73,31 @@ impl Instruction<'_> {
         return code;
     }
 
+    pub fn get_a_code(&self) -> String {
+        return match self.kind {
+            Some(InstructionType::A) => {
+                self.text.replace("@", "")
+            }
+            Some(InstructionType::L) => {
+                self.text.replace("(", "").replace(")", "")
+            }
+            Some(InstructionType::C) => { return "".to_string() }
+            None => {
+                return "".to_string()
+            }
+        };
+    }
+
     /// Returns the symbol xxx in @xxx or (xxx)
     pub fn symbol(&self) -> Option<String> {
         if self.kind ==  Some(InstructionType::A) {
-            let re = Regex::new("@([(a-z)(A-Z)(0-9)]+)").unwrap();
+            let re = Regex::new("@(.+)").unwrap();
             let caps = re.captures(self.text).unwrap();
 
             return Some(caps[1].to_string())
         }
         else if self.kind == Some(InstructionType::L) {
-            let re = Regex::new(r"\(([(a-z)(A-Z)(0-9)]+)\)").unwrap();
+            let re = Regex::new(r"\((.+)\)").unwrap();
             let caps = re.captures(self.text).unwrap();
 
             return Some(caps[1].to_string())
@@ -161,6 +176,16 @@ impl Instruction<'_> {
             println!("Jump: {:?}", self.jump());
         }
     }
+}
+
+pub fn byte_creator(str: &str) -> String {
+    let mut bytes = format!("{:b}", str.parse::<i32>().unwrap());
+
+    while bytes.len() < 16 {
+        bytes = format!("0{}", bytes);
+    }
+
+    return bytes;
 }
 
 #[cfg(test)]

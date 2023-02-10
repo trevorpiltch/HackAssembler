@@ -18,13 +18,26 @@ pub fn get_file() -> String {
     fs::read_to_string(args.file_name).expect("Must be a file in the current directory.")
 }
 
+pub fn get_name() -> String {
+    let args = Args::parse();
+    let name = args.file_name;
+
+    let is_asm = name.find(".asm");
+
+    if is_asm != None {
+        let file: Vec<&str> = name.split(".asm").collect();
+        return file[0].to_string();
+    }
+    else {
+        panic!("Not an assembly file")
+    }
+}
+
 /// Creates the file in the current directory named name with contents
 pub fn create_file(name: &str, contents: String) -> std::io::Result<()> {
     let bytes = contents.as_bytes();
     let mut file = File::create(name)?;
     file.write_all(&bytes)?;
-
-    println!("Successfully created file {}", name);
 
     Ok(())
 }
