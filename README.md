@@ -1,15 +1,18 @@
-# Hack Assembly
+# Hack Assembler
+For my CS590 class at Phillips Exeter Academy, we followed the [Nand to Tetris](https://www.nand2tetris.org/) book for designing and developing a computer from first principles. As part of our midterm, we were tasked with writing an assembler that translated Hack Assembly instructions into machine code. I decided to write it in Rust as a way to learn the language and to see what its capabilities were. 
+
 ## Installing Rust
+Install Rust:
 `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`<br>
-Check installation by running `rustup --version`<br>
-Should show something like this: `rustup 1.25.1 (bb60b1e89 2022-07-12)`<br><br>
-## Running Hack Assembly Program
-Navigate into top level \\hack\_assembly directory.<br>
-Add the assembly file you wish to assemble into this directory (must be error free).<br>
-Run program with `cargo run <FILE_NAME>`<br><br>
+Verifiy your installation: `rustup --version`<br>
+
+## Running Program
+1. Navigate into top level directory.<br>
+2. Add the assembly file you wish to assemble into this directory (must be error free, currently this tool doesn't support error corrections).<br>
+3. Run program with `cargo run <FILE_NAME>`<br><br>
 
 ## Dependencies Used
-Clap: Rust command line argument parser. [https://github.com/clap-rs/clap]<br>
-Dict: Dictionaries in rust. [https://github.com/nachoparker/rust-dict]<br>
-Progress_bar: Rust command line progress indicator. [https://github.com/Mubelotix/cli_progress_bar]<br>
-Regex: Rust regular expression framework. [https://github.com/rust-lang/regex]<br>
+[Clap](https://github.com/clap-rs/clap): Rust command line argument parser. <br>
+[Dict](https://github.com/nachoparker/rust-dict): Dictionaries in rust. <br>
+[Progress_bar](https://github.com/Mubelotix/cli_progress_bar): Rust command line progress indicator.<br>
+[Regex](https://github.com/rust-lang/regex): Rust regular expression framework.
